@@ -1,0 +1,263 @@
+USE defaultdb;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- ==========================================
+-- 1. ROLES
+-- ==========================================
+DROP TABLE IF EXISTS `roles`;
+CREATE TABLE `roles` (
+  `id_rol` bigint NOT NULL AUTO_INCREMENT,
+  `nombre_rol` varchar(50) NOT NULL,
+  PRIMARY KEY (`id_rol`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ==========================================
+-- 2. USUARIOS
+-- ==========================================
+DROP TABLE IF EXISTS `usuarios`;
+CREATE TABLE `usuarios` (
+  `id_usuario` bigint NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `id_rol` bigint DEFAULT NULL,
+  `estado` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT (now()),
+  PRIMARY KEY (`id_usuario`),
+  UNIQUE KEY `username` (`username`),
+  KEY `id_rol` (`id_rol`),
+  CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`id_rol`) REFERENCES `roles` (`id_rol`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ==========================================
+-- 3. PERSONAS
+-- ==========================================
+DROP TABLE IF EXISTS `personas`;
+CREATE TABLE `personas` (
+  `id_persona` bigint NOT NULL AUTO_INCREMENT,
+  `dni` char(8) NOT NULL,
+  `nombres` varchar(100) DEFAULT NULL,
+  `apellidos` varchar(100) DEFAULT NULL,
+  `fecha_nacimiento` date DEFAULT NULL,
+  `genero` varchar(20) DEFAULT NULL,
+  `telefono` varchar(15) DEFAULT NULL,
+  `correo` varchar(100) DEFAULT NULL,
+  `direccion` varchar(255) DEFAULT NULL,
+  `id_usuario` bigint DEFAULT NULL,
+  PRIMARY KEY (`id_persona`),
+  UNIQUE KEY `dni` (`dni`),
+  UNIQUE KEY `id_usuario` (`id_usuario`),
+  CONSTRAINT `FK5lt3cefmp53qkehyrfy5r4flg` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ==========================================
+-- 4. ESPECIALIDADES
+-- ==========================================
+DROP TABLE IF EXISTS `especialidades`;
+CREATE TABLE `especialidades` (
+  `id_especialidad` bigint NOT NULL AUTO_INCREMENT,
+  `nombre_especialidad` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id_especialidad`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ==========================================
+-- 5. MEDICOS
+-- ==========================================
+DROP TABLE IF EXISTS `medicos`;
+CREATE TABLE `medicos` (
+  `id_medico` bigint NOT NULL AUTO_INCREMENT,
+  `id_persona` bigint DEFAULT NULL,
+  `cmp` varchar(10) DEFAULT NULL,
+  `id_especialidad` bigint DEFAULT NULL,
+  PRIMARY KEY (`id_medico`),
+  UNIQUE KEY `id_persona` (`id_persona`),
+  UNIQUE KEY `cmp` (`cmp`),
+  KEY `id_especialidad` (`id_especialidad`),
+  CONSTRAINT `medicos_ibfk_1` FOREIGN KEY (`id_especialidad`) REFERENCES `especialidades` (`id_especialidad`),
+  CONSTRAINT `medicos_persona_fk` FOREIGN KEY (`id_persona`) REFERENCES `personas` (`id_persona`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ==========================================
+-- 6. HISTORIAS CLINICAS
+-- ==========================================
+DROP TABLE IF EXISTS `historias_clinicas`;
+CREATE TABLE `historias_clinicas` (
+  `id_hc` bigint NOT NULL AUTO_INCREMENT,
+  `id_paciente` bigint DEFAULT NULL,
+  `nro_historia` varchar(20) DEFAULT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT (now()),
+  PRIMARY KEY (`id_hc`),
+  UNIQUE KEY `id_paciente` (`id_paciente`),
+  UNIQUE KEY `nro_historia` (`nro_historia`),
+  CONSTRAINT `historias_paciente_fk` FOREIGN KEY (`id_paciente`) REFERENCES `personas` (`id_persona`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ==========================================
+-- 7. ATENCIONES MEDICAS
+-- ==========================================
+DROP TABLE IF EXISTS `atenciones_medicas`;
+CREATE TABLE `atenciones_medicas` (
+  `id_atencion` bigint NOT NULL AUTO_INCREMENT,
+  `id_hc` bigint DEFAULT NULL,
+  `id_medico` bigint DEFAULT NULL,
+  `id_cita` bigint DEFAULT NULL,
+  `fecha_atencion` timestamp NULL DEFAULT (now()),
+  `motivo_consulta` text,
+  `triaje_presion` varchar(10) DEFAULT NULL,
+  `triaje_temperatura` decimal(4,2) DEFAULT NULL,
+  `triaje_peso` decimal(5,2) DEFAULT NULL,
+  `triaje_saturacion` bigint DEFAULT NULL,
+  `triaje_frecuencia_cardiaca` bigint DEFAULT NULL,
+  PRIMARY KEY (`id_atencion`),
+  UNIQUE KEY `id_cita` (`id_cita`),
+  KEY `id_hc` (`id_hc`),
+  KEY `id_medico` (`id_medico`),
+  CONSTRAINT `atenciones_medicas_ibfk_1` FOREIGN KEY (`id_hc`) REFERENCES `historias_clinicas` (`id_hc`),
+  CONSTRAINT `atenciones_medicas_ibfk_2` FOREIGN KEY (`id_medico`) REFERENCES `medicos` (`id_medico`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ==========================================
+-- 8. SEDES
+-- ==========================================
+DROP TABLE IF EXISTS `sedes`;
+CREATE TABLE `sedes` (
+  `id_sede` bigint NOT NULL AUTO_INCREMENT,
+  `nombre_sede` varchar(100) DEFAULT NULL,
+  `direccion` text,
+  PRIMARY KEY (`id_sede`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ==========================================
+-- 9. CONSULTORIOS
+-- ==========================================
+DROP TABLE IF EXISTS `consultorios`;
+CREATE TABLE `consultorios` (
+  `id_consultorio` bigint NOT NULL AUTO_INCREMENT,
+  `numero_consultorio` varchar(10) DEFAULT NULL,
+  `id_sede` bigint DEFAULT NULL,
+  PRIMARY KEY (`id_consultorio`),
+  KEY `id_sede` (`id_sede`),
+  CONSTRAINT `consultorios_ibfk_1` FOREIGN KEY (`id_sede`) REFERENCES `sedes` (`id_sede`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ==========================================
+-- 10. CITAS
+-- ==========================================
+DROP TABLE IF EXISTS `citas`;
+CREATE TABLE `citas` (
+  `id_cita` bigint NOT NULL AUTO_INCREMENT,
+  `id_paciente` bigint DEFAULT NULL,
+  `id_medico` bigint DEFAULT NULL,
+  `id_consultorio` bigint DEFAULT NULL,
+  `fecha_cita` date DEFAULT NULL,
+  `hora_cita` time DEFAULT NULL,
+  `estado_cita` varchar(20) DEFAULT NULL,
+  `monto_pago` decimal(10,2) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT (now()),
+  PRIMARY KEY (`id_cita`),
+  KEY `id_paciente` (`id_paciente`),
+  KEY `id_medico` (`id_medico`),
+  KEY `id_consultorio` (`id_consultorio`),
+  CONSTRAINT `citas_ibfk_1` FOREIGN KEY (`id_paciente`) REFERENCES `personas` (`id_persona`),
+  CONSTRAINT `citas_ibfk_2` FOREIGN KEY (`id_medico`) REFERENCES `medicos` (`id_medico`),
+  CONSTRAINT `citas_ibfk_3` FOREIGN KEY (`id_consultorio`) REFERENCES `consultorios` (`id_consultorio`),
+  CONSTRAINT `citas_ibfk_4` FOREIGN KEY (`id_cita`) REFERENCES `atenciones_medicas` (`id_cita`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ==========================================
+-- 11. DIAGNOSTICOS ATENCION
+-- ==========================================
+DROP TABLE IF EXISTS `diagnosticos_atencion`;
+CREATE TABLE `diagnosticos_atencion` (
+  `id_det_diag` bigint NOT NULL AUTO_INCREMENT,
+  `id_atencion` bigint DEFAULT NULL,
+  `codigo_cie10` varchar(10) DEFAULT NULL,
+  `descripcion_diagnostico` text,
+  `tipo_diagnostico` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`id_det_diag`),
+  KEY `id_atencion` (`id_atencion`),
+  CONSTRAINT `diagnosticos_atencion_ibfk_1` FOREIGN KEY (`id_atencion`) REFERENCES `atenciones_medicas` (`id_atencion`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ==========================================
+-- 12. RECETAS ELECTRONICAS
+-- ==========================================
+DROP TABLE IF EXISTS `recetas_electronicas`;
+CREATE TABLE `recetas_electronicas` (
+  `id_receta` bigint NOT NULL AUTO_INCREMENT,
+  `id_atencion` bigint DEFAULT NULL,
+  `fecha_emision` timestamp NULL DEFAULT (now()),
+  `vigencia_dias` int DEFAULT '3',
+  `estado` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`id_receta`),
+  KEY `id_atencion` (`id_atencion`),
+  CONSTRAINT `recetas_electronicas_ibfk_1` FOREIGN KEY (`id_atencion`) REFERENCES `atenciones_medicas` (`id_atencion`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ==========================================
+-- 13. MEDICAMENTOS
+-- ==========================================
+DROP TABLE IF EXISTS `medicamentos`;
+CREATE TABLE `medicamentos` (
+  `id_medicamento` bigint NOT NULL AUTO_INCREMENT,
+  `nombre_generico` varchar(100) DEFAULT NULL,
+  `nombre_comercial` varchar(100) DEFAULT NULL,
+  `presentacion` varchar(50) DEFAULT NULL,
+  `concentracion` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`id_medicamento`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ==========================================
+-- 14. DETALLE RECETA
+-- ==========================================
+DROP TABLE IF EXISTS `detalle_receta`;
+CREATE TABLE `detalle_receta` (
+  `id_det_receta` bigint NOT NULL AUTO_INCREMENT,
+  `id_receta` bigint DEFAULT NULL,
+  `id_medicamento` bigint DEFAULT NULL,
+  `cantidad` bigint DEFAULT NULL,
+  `posologia` text,
+  PRIMARY KEY (`id_det_receta`),
+  KEY `id_receta` (`id_receta`),
+  KEY `id_medicamento` (`id_medicamento`),
+  CONSTRAINT `detalle_receta_ibfk_1` FOREIGN KEY (`id_receta`) REFERENCES `recetas_electronicas` (`id_receta`),
+  CONSTRAINT `detalle_receta_ibfk_2` FOREIGN KEY (`id_medicamento`) REFERENCES `medicamentos` (`id_medicamento`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ==========================================
+-- 15. HORARIOS MEDICOS
+-- ==========================================
+DROP TABLE IF EXISTS `horarios_medicos`;
+CREATE TABLE `horarios_medicos` (
+  `id_horario` bigint NOT NULL AUTO_INCREMENT,
+  `id_medico` bigint DEFAULT NULL,
+  `id_sede` bigint DEFAULT NULL,
+  `dia_semana` bigint DEFAULT NULL,
+  `hora_inicio` time DEFAULT NULL,
+  `hora_fin` time DEFAULT NULL,
+  PRIMARY KEY (`id_horario`),
+  KEY `id_medico` (`id_medico`),
+  KEY `id_sede` (`id_sede`),
+  CONSTRAINT `horarios_medicos_ibfk_1` FOREIGN KEY (`id_medico`) REFERENCES `medicos` (`id_medico`),
+  CONSTRAINT `horarios_medicos_ibfk_2` FOREIGN KEY (`id_sede`) REFERENCES `sedes` (`id_sede`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- ==========================================
+-- 16. INVENTARIO SEDE
+-- ==========================================
+DROP TABLE IF EXISTS `inventario_sede`;
+CREATE TABLE `inventario_sede` (
+  `id_inventario` bigint NOT NULL AUTO_INCREMENT,
+  `id_sede` bigint DEFAULT NULL,
+  `id_medicamento` bigint DEFAULT NULL,
+  `stock_actual` bigint DEFAULT NULL,
+  `lote` varchar(50) DEFAULT NULL,
+  `fecha_vencimiento` date DEFAULT NULL,
+  PRIMARY KEY (`id_inventario`),
+  KEY `id_sede` (`id_sede`),
+  KEY `id_medicamento` (`id_medicamento`),
+  CONSTRAINT `inventario_sede_ibfk_1` FOREIGN KEY (`id_sede`) REFERENCES `sedes` (`id_sede`),
+  CONSTRAINT `inventario_sede_ibfk_2` FOREIGN KEY (`id_medicamento`) REFERENCES `medicamentos` (`id_medicamento`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+SET FOREIGN_KEY_CHECKS = 1;
